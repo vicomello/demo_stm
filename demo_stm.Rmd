@@ -1,0 +1,129 @@
+---
+title: "demo_stm"
+author: "Victoria Oldemburgo de Mello"
+date: "02/12/2021"
+output: pdf_document
+---
+
+The goal of this document is to show how a stm analysis can be carried out in R with package stm by Molly Roberts. For technical info, refer to https://www.jstatsoft.org/index.php/jss/article/view/v091i02.
+
+# Part 1: loading required packages
+
+```{r, results='hide'}
+# You need these three to run any stm
+library(tidyverse)
+library(tm)
+library(stm)
+
+# You need these three if you want to run stm with k (number of topics) = 0. (When you set that option, they pick a k for you)
+library(Rtsne)
+library(rsvd)
+library(geometry)
+
+# package needed to tun wordclouds
+library(wordcloud)
+
+# package needed to plot correlations
+library(igraph)
+```
+
+# Part 2: load dataset
+stm takes into account metadata for the model. Because of this, we will just provide the entire dataset of tweets with the users, dates, etc. 
+I will NOT make this dataset available because it contains personally identifiable information from my study participants. If you want your a dataset, you can just collect tweets with rtweet package or use some of the datasets provided by Roberts in her paper. 
+
+```{r, results='hide'}
+load("Study 2/Analyses/twitter data analysis/twitter_data_allbatches.RData")
+```
+
+# Part 3: prepare data
+Here we will prepare the data to analyze it with stm. The steps here are very automatic, there's not much you need to do or think about, just reproduce the code with your data. 
+
+Here's what this step is doing:
+- stemming (reducing words to their root form)
+- removing punctuation
+- removing stop words (e.g., the, is, at)
+
+This step might take some time. Be prepared to let this run while you do something else. 
+
+```{r}
+processed <- stm::textProcessor(df$text, metadata = df)
+```
+
+In the next steps you will get the elements you need to actually run the stm.
+There are things you can customize in this step (e.g.: adding the argument "lower.thresh" in the functions "plotRemoved" to remove words that don't appear a certain frequency)
+
+```{r}
+# plotRemoved(processed$documents, lower.thresh = seq(1, 200, by = 100))
+# will not run this bc I don't need it
+
+out <- prepDocuments(processed$documents,
+                     processed$vocab,
+                     processed$meta)
+
+# you have to set it up to you don't find error in a later function
+tweets <- data.frame(df$text)
+text_thoughts <- tweets[-out$docs.removed,]
+
+docs <- out$documents
+vocab <- out$vocab
+meta <- out$meta
+```
+
+# Part 4: Run stm
+The idea here is like running a lm model: you need to run it and then use other functions to vizualize and inspect the results.
+The argument you should pay attention to is "k = n", where n is the number of topics you want.
+Ideally you know how many topics you want. That is almost never true, so there are a few pathways you can follow to select your k. 
+
+First, let's just run it so you see that it works. This might take some time to run, so plan something else for a few minutes. 
+
+```{r}
+First_STM <- stm(documents = out$documents, vocab = out$vocab,
+                 K = 10,
+                 max.em.its = 75, data = out$meta, 
+                 init.type = "Spectral", verbose = FALSE)
+
+plot(First_STM)
+
+```
+You can see an overview of the 10 topics the model found.
+
+Now let's go back to finding k.
+One approach is to use k=0. This way the algorithm somehow tries to find an "optimal" number of topics. For reasons I mathematically do not understand, you shouldn't just stick to this model. But you can run it (this will likely take more time than the previous model)
+
+```{r}
+Second_STM <- stm(documents = out$documents, vocab = out$vocab,
+                 K = 0,
+                 max.em.its = 75, data = out$meta, 
+                 init.type = "Spectral", verbose = FALSE)
+plot(Second_STM)
+```
+
+Another way to go is to use "SearchK()" function. This function basically compares two models, almost like an ANOVA would compare two lm models. 
+
+```{r}
+search2 <- searchK(out$documents, out$vocab, K = c(12, 15))
+search2
+plot.searchK(search2)
+```
+
+# Part 5: Visualize results
+Here are some functions you can use to visualize the results
+```{r}
+plot(First_STM)
+labelTopics(First_STM)
+findThoughts(First_STM, text_thoughts, topics = 8, n = 3)
+cloud(First_STM)
+```
+
+# Exploration
+You can calculate correlation between topics with the function
+```{r}
+cor_topics <- topicCorr(First_STM)
+plot(cor_topics)
+```
+
+
+
+
+
+

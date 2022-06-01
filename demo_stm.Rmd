@@ -29,7 +29,7 @@ library(igraph)
 
 # Part 2: load dataset
 stm takes into account metadata for the model. Because of this, we will just provide the entire dataset of tweets with the users, dates, etc. 
-I will NOT make this dataset available because it contains personally identifiable information from my study participants. If you want your a dataset, you can just collect tweets with rtweet package or use some of the datasets provided by Roberts in her paper. 
+I will NOT make this dataset available because it contains personally identifiable information from my study participants. If you want a dataset, you can just collect tweets with rtweet package or use some of the datasets provided by Roberts in her paper. 
 
 ```{r, results='hide'}
 load("Study 2/Analyses/twitter data analysis/twitter_data_allbatches.RData")

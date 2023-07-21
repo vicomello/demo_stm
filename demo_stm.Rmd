@@ -7,6 +7,8 @@ output: pdf_document
 
 The goal of this document is to show how a stm analysis can be carried out in R with package stm by Molly Roberts. For technical info, refer to https://www.jstatsoft.org/index.php/jss/article/view/v091i02.
 
+Ref: Roberts, M. E., Stewart, B. M., & Tingley, D. (2019). Stm: An R package for structural topic models. Journal of Statistical Software, 91, 1-40.
+
 # Part 1: loading required packages
 
 ```{r, results='hide'}
